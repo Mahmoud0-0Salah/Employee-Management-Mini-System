@@ -1,4 +1,6 @@
 using Employee_Management_Mini_System.Data;
+using Employee_Management_Mini_System.Repositories;
+using Employee_Management_Mini_System.Repositories.Contracts;
 using Microsoft.EntityFrameworkCore;
 
 namespace Employee_Management_Mini_System
@@ -14,6 +16,8 @@ namespace Employee_Management_Mini_System
 
 			builder.Services.AddDbContext<ApplicationDbContext>(options =>
 			  options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+			builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 
 			var app = builder.Build();
 

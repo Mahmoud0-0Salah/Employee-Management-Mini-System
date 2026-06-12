@@ -34,6 +34,7 @@ namespace Employee_Management_Mini_System.Models
 		public bool IsActive { get; set; } = true;
 
 		[ForeignKey("Department")]
+		[Required]
 		public int DepartmentId { get; set; }
 		public Department Department { get; set; }
 	}

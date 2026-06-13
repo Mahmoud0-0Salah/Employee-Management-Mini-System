@@ -1,0 +1,151 @@
+@using Employee_Management_Mini_System.Services.Contracts
+@inject IDepartmentService DepartmentService
+@model IEnumerable<Employee_Management_Mini_System.Models.Employee>
+
+@{
+    ViewData["Title"] = "Employees";
+    
+    int currentPage = 1;
+    if (int.TryParse(Context.Request.Query["pageNumber"], out int p)) 
+    { 
+        currentPage = p; 
+    }
+    
+    int totalPages = 1;
+    int totalRecords = 0;
+    if (ViewData["TotalPages"] != null)
+    {
+        totalRecords = Convert.ToInt32(ViewData["TotalPages"]);
+        int pageSize = 10;
+        totalPages = (int)Math.Ceiling((double)totalRecords / pageSize);
+        if (totalPages == 0) totalPages = 1;
+    }
+
+    var departments = await DepartmentService.GetDepartments();
+    var deptList = new SelectList(departments, "Id", "Name", Context.Request.Query["departmentID"]);
+    string actionName = ViewContext.RouteData.Values["action"]?.ToString() ?? "Index";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 mt-2">
+    <h2 class="m-0"><i class="bi bi-people text-primary me-2"></i>Employee Directory</h2>
+    <a asp-action="Create" class="btn btn-primary shadow-sm">
+        <i class="bi bi-plus-circle me-1"></i> Add Employee
+    </a>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form asp-action="Search" method="get" class="row gx-2 gy-2 align-items-center">
+            <div class="col-md-4">
+                <div class="input-group">
+                    <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" name="searchString" class="form-control border-start-0" placeholder="Search by name..." value="@ViewData["CurrentFilter"]" />
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="input-group">
+                    <span class="input-group-text bg-white"><i class="bi bi-building text-muted"></i></span>
+                    <select name="departmentID" class="form-select border-start-0" asp-items="deptList">
+                        <option value="-1">All Departments</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-secondary">Search</button>
+                <a asp-action="Index" class="btn btn-link text-decoration-none text-muted">Clear</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>@Html.DisplayNameFor(model => model.FullName)</th>
+                    <th>@Html.DisplayNameFor(model => model.JobTitle)</th>
+                    <th>@Html.DisplayNameFor(model => model.Department)</th>
+                    <th>Contact Info</th>
+                    <th>@Html.DisplayNameFor(model => model.HireDate)</th>
+                    <th>Status</th>
+                    <th class="text-end pe-4">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="border-top-0">
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="fw-medium text-dark ps-3">@Html.DisplayFor(modelItem => item.FullName)</td>
+                            <td>@Html.DisplayFor(modelItem => item.JobTitle)</td>
+                            <td>
+                                <span class="badge bg-info text-dark">@(item.Department != null ? item.Department.Name : "N/A")</span>
+                            </td>
+                            <td>
+                                <div class="text-muted"><small><i class="bi bi-envelope me-1"></i>@item.Email</small></div>
+                                <div class="text-muted"><small><i class="bi bi-telephone me-1"></i>@item.PhoneNumber</small></div>
+                            </td>
+                            <td>@item.HireDate.ToString("MMM dd, yyyy")</td>
+                            <td>
+                                @if (item.IsActive)
+                                {
+                                    <span class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="badge rounded-pill bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-2 py-1">Inactive</span>
+                                }
+                            </td>
+                            <td class="text-end pe-3">
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary shadow-sm" title="Edit">
+                                    <i class="bi bi-pencil"></i> <span class="d-none d-md-inline ms-1">Edit</span>
+                                </a>
+                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger shadow-sm ms-1" title="Delete">
+                                    <i class="bi bi-trash"></i> <span class="d-none d-md-inline ms-1">Delete</span>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr class="no-results-row">
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <i class="bi bi-person-x fs-1 d-block mb-3 text-secondary"></i>
+                            <h5 class="fw-normal">No employees found</h5>
+                            <p class="mb-0">Try adjusting your search or add a new employee.</p>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="card-footer bg-white border-top-0 py-3">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+            <span class="text-muted small mb-2 mb-md-0">Page @currentPage of @totalPages (Total: @totalRecords entries)</span>
+            <nav aria-label="Table navigation">
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item @(currentPage <= 1 ? "disabled" : "")">
+                        <a class="page-link" href="@Url.Action(actionName, new { pageNumber = currentPage - 1, searchString = ViewData["CurrentFilter"], departmentID = Context.Request.Query["departmentID"] })">Previous</a>
+                    </li>
+                    @for (int i = 1; i <= totalPages; i++)
+                    {
+                        <li class="page-item @(currentPage == i ? "active" : "")">
+                            <a class="page-link" href="@Url.Action(actionName, new { pageNumber = i, searchString = ViewData["CurrentFilter"], departmentID = Context.Request.Query["departmentID"] })">@i</a>
+                        </li>
+                    }
+                    <li class="page-item @(currentPage >= totalPages ? "disabled" : "")">
+                        <a class="page-link" href="@Url.Action(actionName, new { pageNumber = currentPage + 1, searchString = ViewData["CurrentFilter"], departmentID = Context.Request.Query["departmentID"] })">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

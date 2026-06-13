@@ -32,9 +32,9 @@ namespace Employee_Management_Mini_System.Repositories
 			return context.Set<T>().Where(predicate);
 		}
 
-		public void Save()
+		public async Task Save()
 		{
-			context.SaveChanges();
+			await context.SaveChangesAsync();
 		}
 
 		public void Update(T entity)

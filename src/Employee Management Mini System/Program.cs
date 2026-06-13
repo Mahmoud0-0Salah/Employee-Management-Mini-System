@@ -1,6 +1,8 @@
 using Employee_Management_Mini_System.Data;
 using Employee_Management_Mini_System.Repositories;
 using Employee_Management_Mini_System.Repositories.Contracts;
+using Employee_Management_Mini_System.Services;
+using Employee_Management_Mini_System.Services.Contracts;
 using Microsoft.EntityFrameworkCore;
 
 namespace Employee_Management_Mini_System
@@ -18,6 +20,10 @@ namespace Employee_Management_Mini_System
 			  options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 			builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
+			builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
+
+			builder.Services.AddScoped<IEmployeeService, EmployeeService>();
+			builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 
 			var app = builder.Build();
 
@@ -37,7 +43,7 @@ namespace Employee_Management_Mini_System
 			app.MapStaticAssets();
 			app.MapControllerRoute(
 				name: "default",
-				pattern: "{controller=Home}/{action=Index}/{id?}")
+				pattern: "{controller=Employee}/{action=Index}/{id?}")
 				.WithStaticAssets();
 
 			app.Run();

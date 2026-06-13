@@ -1,17 +1,20 @@
-﻿using Employee_Management_Mini_System.Models;
+using Employee_Management_Mini_System.Models;
 using Employee_Management_Mini_System.Models.JunctionTables;
 using Employee_Management_Mini_System.Services.Contracts;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace Employee_Management_Mini_System.Controllers
 {
 	public class EmployeeController : Controller
 	{
 		private readonly IEmployeeService _employeeService;
+		private readonly IDepartmentService _departmentService;
 
-		public EmployeeController(IEmployeeService employeeService)
+		public EmployeeController(IEmployeeService employeeService, IDepartmentService departmentService)
 		{
 			_employeeService = employeeService;
+			_departmentService = departmentService;
 		}
 
 		public async Task<IActionResult> Index([FromQuery] int pageNumber = 1)
@@ -21,11 +24,13 @@ namespace Employee_Management_Mini_System.Controllers
 			var employees = await _employeeService.GetEmployees(pageNumber, pageSize);
 
 			ViewData["TotalPages"] = employees.TotalCount;
+			ViewData["CurrentPage"] = pageNumber;
 
 			return View(employees.Data); 
 		}
 		public async Task<IActionResult> Search([FromQuery] string searchString = "", [FromQuery] int departmentID = -1, [FromQuery] int pageNumber = 1)
 		{
+			searchString ??= "";
 			int pageSize = 10;
 			PagedData<Employee> employees;
 			if (departmentID == -1)
@@ -48,12 +53,15 @@ namespace Employee_Management_Mini_System.Controllers
 			}
 			ViewData["CurrentFilter"] = searchString;
 			ViewData["TotalPages"] = employees.TotalCount;
+			ViewData["CurrentPage"] = pageNumber;
 
-			return View(employees.Data);
+			return PartialView("_EmployeeTablePartial", employees.Data);
 
 		}
-		public IActionResult Create()
+		public async Task<IActionResult> Create()
 		{
+			var departments = await _departmentService.GetDepartments();
+			ViewBag.DepartmentId = new SelectList(departments, "Id", "Name");
 			return View();
 		}
 
@@ -67,6 +75,8 @@ namespace Employee_Management_Mini_System.Controllers
 				await _employeeService.Save();
 				return RedirectToAction(nameof(Index));
 			}
+			var departments = await _departmentService.GetDepartments();
+			ViewBag.DepartmentId = new SelectList(departments, "Id", "Name", employee.DepartmentId);
 			return View(employee);
 		}
 
@@ -80,6 +90,8 @@ namespace Employee_Management_Mini_System.Controllers
 				return NotFound();
 			}
 
+			var departments = await _departmentService.GetDepartments();
+			ViewBag.DepartmentId = new SelectList(departments, "Id", "Name", employee.DepartmentId);
 			return View(employee);
 		}
 
@@ -94,10 +106,12 @@ namespace Employee_Management_Mini_System.Controllers
 
 			if (ModelState.IsValid)
 			{
-				_employeeService.UpdateeEmployee(id);
+				_employeeService.UpdateeEmployee(employee);
 				await _employeeService.Save();
 				return RedirectToAction(nameof(Index));
 			}
+			var departments = await _departmentService.GetDepartments();
+			ViewBag.DepartmentId = new SelectList(departments, "Id", "Name", employee.DepartmentId);
 			return View(employee);
 		}
 
@@ -118,7 +132,7 @@ namespace Employee_Management_Mini_System.Controllers
 		[ValidateAntiForgeryToken]
 		public async Task<IActionResult> DeleteConfirmed(int id)
 		{
-			_employeeService.DeleteEmployee(id);
+			await _employeeService.DeleteEmployee(id);
 			await _employeeService.Save();
 			return RedirectToAction(nameof(Index));
 		}

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Employee_Management_Mini_System.Models
@@ -36,6 +36,6 @@ namespace Employee_Management_Mini_System.Models
 		[ForeignKey("Department")]
 		[Required]
 		public int DepartmentId { get; set; }
-		public Department Department { get; set; }
+		public Department? Department { get; set; }
 	}
 }

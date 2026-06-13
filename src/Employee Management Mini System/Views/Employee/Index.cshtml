@@ -35,7 +35,7 @@
 
 <div class="card shadow-sm mb-4">
     <div class="card-body">
-        <form asp-action="Search" method="get" class="row gx-2 gy-2 align-items-center">
+        <form id="searchForm" asp-action="Search" method="get" class="row gx-2 gy-2 align-items-center">
             <div class="col-md-4">
                 <div class="input-group">
                     <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
@@ -52,100 +52,80 @@
             </div>
             <div class="col-auto">
                 <button type="submit" class="btn btn-secondary">Search</button>
-                <a asp-action="Index" class="btn btn-link text-decoration-none text-muted">Clear</a>
+                <button type="button" id="clearSearchBtn" class="btn btn-link text-decoration-none text-muted">Clear</button>
             </div>
         </form>
     </div>
 </div>
 
-<div class="card shadow-sm">
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
-                <tr>
-                    <th>@Html.DisplayNameFor(model => model.FullName)</th>
-                    <th>@Html.DisplayNameFor(model => model.JobTitle)</th>
-                    <th>@Html.DisplayNameFor(model => model.Department)</th>
-                    <th>Contact Info</th>
-                    <th>@Html.DisplayNameFor(model => model.HireDate)</th>
-                    <th>Status</th>
-                    <th class="text-end pe-4">Actions</th>
-                </tr>
-            </thead>
-            <tbody class="border-top-0">
-                @if (Model != null && Model.Any())
-                {
-                    foreach (var item in Model)
-                    {
-                        <tr>
-                            <td class="fw-medium text-dark ps-3">@Html.DisplayFor(modelItem => item.FullName)</td>
-                            <td>@Html.DisplayFor(modelItem => item.JobTitle)</td>
-                            <td>
-                                <span class="badge bg-info text-dark">@(item.Department != null ? item.Department.Name : "N/A")</span>
-                            </td>
-                            <td>
-                                <div class="text-muted"><small><i class="bi bi-envelope me-1"></i>@item.Email</small></div>
-                                <div class="text-muted"><small><i class="bi bi-telephone me-1"></i>@item.PhoneNumber</small></div>
-                            </td>
-                            <td>@item.HireDate.ToString("MMM dd, yyyy")</td>
-                            <td>
-                                @if (item.IsActive)
-                                {
-                                    <span class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1">Active</span>
-                                }
-                                else
-                                {
-                                    <span class="badge rounded-pill bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-2 py-1">Inactive</span>
-                                }
-                            </td>
-                            <td class="text-end pe-3">
-                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary shadow-sm" title="Edit">
-                                    <i class="bi bi-pencil"></i> <span class="d-none d-md-inline ms-1">Edit</span>
-                                </a>
-                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger shadow-sm ms-1" title="Delete">
-                                    <i class="bi bi-trash"></i> <span class="d-none d-md-inline ms-1">Delete</span>
-                                </a>
-                            </td>
-                        </tr>
-                    }
-                }
-                else
-                {
-                    <tr class="no-results-row">
-                        <td colspan="7" class="text-center py-5 text-muted">
-                            <i class="bi bi-person-x fs-1 d-block mb-3 text-secondary"></i>
-                            <h5 class="fw-normal">No employees found</h5>
-                            <p class="mb-0">Try adjusting your search or add a new employee.</p>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-    
-    <div class="card-footer bg-white border-top-0 py-3">
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
-            <span class="text-muted small mb-2 mb-md-0">Page @currentPage of @totalPages (Total: @totalRecords entries)</span>
-            <nav aria-label="Table navigation">
-                <ul class="pagination pagination-sm mb-0">
-                    <li class="page-item @(currentPage <= 1 ? "disabled" : "")">
-                        <a class="page-link" href="@Url.Action(actionName, new { pageNumber = currentPage - 1, searchString = ViewData["CurrentFilter"], departmentID = Context.Request.Query["departmentID"] })">Previous</a>
-                    </li>
-                    @for (int i = 1; i <= totalPages; i++)
-                    {
-                        <li class="page-item @(currentPage == i ? "active" : "")">
-                            <a class="page-link" href="@Url.Action(actionName, new { pageNumber = i, searchString = ViewData["CurrentFilter"], departmentID = Context.Request.Query["departmentID"] })">@i</a>
-                        </li>
-                    }
-                    <li class="page-item @(currentPage >= totalPages ? "disabled" : "")">
-                        <a class="page-link" href="@Url.Action(actionName, new { pageNumber = currentPage + 1, searchString = ViewData["CurrentFilter"], departmentID = Context.Request.Query["departmentID"] })">Next</a>
-                    </li>
-                </ul>
-            </nav>
-        </div>
-    </div>
+<div class="card shadow-sm" id="employee-list-container">
+    @await Html.PartialAsync("_EmployeeTablePartial", Model)
 </div>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <script>
+        $(document).ready(function() {
+            function fetchEmployees(pageNumber) {
+                var form = $('#searchForm');
+                var url = form.attr('action') || '@Url.Action("Search", "Employee")';
+                var searchString = $('input[name="searchString"]').val();
+                var departmentID = $('select[name="departmentID"]').val();
+                
+                $('#employee-list-container').css('opacity', '0.6');
+                
+                $.ajax({
+                    url: url,
+                    type: 'GET',
+                    data: {
+                        searchString: searchString,
+                        departmentID: departmentID,
+                        pageNumber: pageNumber
+                    },
+                    success: function(response) {
+                        $('#employee-list-container').html(response);
+                        $('#employee-list-container').css('opacity', '1');
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error loading search results:", error);
+                        $('#employee-list-container').css('opacity', '1');
+                    }
+                });
+            }
+
+            $('#searchForm').on('submit', function(e) {
+                e.preventDefault();
+                fetchEmployees(1);
+            });
+
+            $('select[name="departmentID"]').on('change', function() {
+                fetchEmployees(1);
+            });
+
+            var typingTimer;
+            var doneTypingInterval = 350;
+            $('input[name="searchString"]').on('keyup input', function() {
+                clearTimeout(typingTimer);
+                typingTimer = setTimeout(function() {
+                    fetchEmployees(1);
+                }, doneTypingInterval);
+            });
+
+            $(document).on('click', '#employee-list-container .pagination .page-link', function(e) {
+                e.preventDefault();
+                var page = $(this).attr('data-page');
+                if (page && !$(this).parent().hasClass('disabled') && !$(this).parent().hasClass('active')) {
+                    fetchEmployees(page);
+                }
+            });
+
+            $('#clearSearchBtn').on('click', function(e) {
+                e.preventDefault();
+                $('input[name="searchString"]').val('');
+                $('select[name="departmentID"]').val('-1');
+                fetchEmployees(1);
+            });
+        });
+    </script>
 }

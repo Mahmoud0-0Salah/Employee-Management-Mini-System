@@ -37,7 +37,7 @@ This project implements a lightweight directory system to create, read, update, 
 ## How to Run the Project
 
 ### Prerequisites
-* .NET 8.0 SDK or later
+* .NET 10.0 SDK 
 * SQL Server or LocalDB instance installed locally
 
 ### Step-by-Step Instructions

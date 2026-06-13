@@ -18,13 +18,19 @@ This project implements a lightweight directory system to create, read, update, 
 *(Add screenshots of your application in this section)*
 
 ### Employee Directory (Index Page)
-![Employee Directory Index](docs/screenshots/directory_index.png)
+<img width="1888" height="903" alt="Screenshot 2026-06-13 182630" src="https://github.com/user-attachments/assets/7f42d605-b1ed-4f6d-952f-ea8d84917e25" />
+
+### Search Employees by name or department
+<img width="1912" height="396" alt="Screenshot 2026-06-13 182644" src="https://github.com/user-attachments/assets/0dfbe11f-b586-43cc-b128-314ee2bf8f48" />
 
 ### Create Employee Page
-![Create Employee Screen](docs/screenshots/create_employee.png)
+<img width="1918" height="739" alt="Screenshot 2026-06-13 182654" src="https://github.com/user-attachments/assets/48429170-1404-4b7b-9c48-c3e464a7721a" />
 
 ### Edit Employee Page
-![Edit Employee Screen](docs/screenshots/edit_employee.png)
+<img width="1917" height="758" alt="Screenshot 2026-06-13 182703" src="https://github.com/user-attachments/assets/5e05e0d8-bbed-474e-be34-59bf17c4e87c" />
+
+### Delete Employee Page
+<img width="1919" height="753" alt="Screenshot 2026-06-13 182719" src="https://github.com/user-attachments/assets/8e714daa-1d5e-46d5-98cd-aa504fbdff6b" />
 
 ---
 
